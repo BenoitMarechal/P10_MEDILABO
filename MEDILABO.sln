@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34616.47
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PatientsMicroService", "PatientsMicroService", "{10E9543B-069E-449D-8CBC-E81095DFE5E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PatientsMicroService", "PatientsMicroService\PatientsMicroService.csproj", "{DBE730B8-957A-457A-BD1B-96CD354D0892}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DBE730B8-957A-457A-BD1B-96CD354D0892}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBE730B8-957A-457A-BD1B-96CD354D0892}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBE730B8-957A-457A-BD1B-96CD354D0892}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBE730B8-957A-457A-BD1B-96CD354D0892}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DBE730B8-957A-457A-BD1B-96CD354D0892} = {10E9543B-069E-449D-8CBC-E81095DFE5E5}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0EEAE696-09E7-44FF-AC12-12F95FA500AA}
+	EndGlobalSection
+EndGlobal

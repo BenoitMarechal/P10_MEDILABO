@@ -1,0 +1,6 @@
+@PatientMicroService_HostAddress = http://localhost:5104
+
+GET {{PatientMicroService_HostAddress}}/patients/
+Accept: application/json
+
+###

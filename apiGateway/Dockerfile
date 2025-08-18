@@ -4,10 +4,10 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["PatientsMicroService/PatientsMicroService.csproj", "PatientsMicroService/"]
-RUN dotnet restore "PatientsMicroService/PatientsMicroService.csproj"
+COPY ["apiGateway/apiGateway.csproj", "apiGateway/"]
+RUN dotnet restore "apiGateway/apiGateway.csproj"
 COPY . .
-WORKDIR "/src/PatientsMicroService"
+WORKDIR "/src/apiGateway"
 RUN dotnet build -c Release -o /app/build
 
 FROM build AS publish
@@ -16,4 +16,4 @@ RUN dotnet publish -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "PatientsMicroService.dll"]
+ENTRYPOINT ["dotnet", "apiGateway.dll"]

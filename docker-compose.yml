@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  apigateway:
+    build:
+      context: .
+      dockerfile: apiGateway/Dockerfile
+    ports:
+      - "5000:80"
+    depends_on:
+      - patientsmicroservice
+
+  patientsmicroservice:
+    build:
+      context: .
+      dockerfile: PatientsMicroService/Dockerfile
+    ports:
+      - "5001:80"

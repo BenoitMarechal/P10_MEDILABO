@@ -10,6 +10,20 @@ services:
     ports:
       - "1433:1433"
     platform: linux/amd64
+
+  identitymicroservice:
+    build:
+        context: .
+        dockerfile: IdentityMicroService/Dockerfile
+    container_name: identitymicroservice
+
+    platform: linux/amd64
+    ports:
+          - "5003:80"
+    environment:
+          - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=PatientsDb;User Id=sa;Password=Your_password123;Encrypt=True;TrustServerCertificate=True;
+    depends_on:
+          - sqlserver
     
   patientsmicroservice:
     build:

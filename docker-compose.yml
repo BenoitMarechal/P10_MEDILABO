@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -23,6 +24,17 @@ services:
     depends_on:
       - sqlserver
       
+  frontendmicroservice:
+    build:
+      context: .
+      dockerfile: FrontEndMicroService/Dockerfile
+    container_name: frontendmicroservice
+    platform: linux/amd64
+    ports:
+      - "5069:8080"
+      - "7199:8081"
+    # No depends_on ? frontend starts independently
+
   apigateway:
     build:
       context: .
@@ -33,3 +45,4 @@ services:
       - "5000:80"
     depends_on:
       - patientsmicroservice
+      - frontendmicroservice

@@ -11,6 +11,19 @@
       ],
       "UpstreamPathTemplate": "/patients/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+
+    {
+      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "frontendmicroservice",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/frontend/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST" ]
     }
   ],
   "GlobalConfiguration": {

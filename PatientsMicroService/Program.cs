@@ -1,5 +1,10 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PatientMicroService.Data;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +19,7 @@ builder.Services.AddSwaggerGen();
 // Configure to listen on all interfaces
 builder.WebHost.UseUrls("http://0.0.0.0:80");
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -23,10 +29,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// REMOVE THIS LINE - it's causing issues with HTTP communication
-// app.UseHttpsRedirection();
+
 
 app.UseAuthorization();
+
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())

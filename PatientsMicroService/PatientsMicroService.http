@@ -1,6 +1,6 @@
-@PatientMicroService_HostAddress = http://localhost:5104
+@PatientsMicroService_HostAddress = http://localhost:5104
 
-GET {{PatientMicroService_HostAddress}}/patients/
+GET {{PatientsMicroService_HostAddress}}/patients/
 Accept: application/json
 
 ###

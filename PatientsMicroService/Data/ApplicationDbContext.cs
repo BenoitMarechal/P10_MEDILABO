@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PatientMicroService.Models;
+using PatientsMicroService.Models;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 
-namespace PatientMicroService.Data
+namespace PatientsMicroService.Data
 {
     public class ApplicationDbContext : DbContext
     {

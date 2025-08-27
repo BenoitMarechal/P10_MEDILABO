@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PatientMicroService.Models;
-using PatientMicroService.Data;
+using PatientsMicroService.Models;
+using PatientsMicroService.Data;
 
-namespace PatientMicroService.Controllers
+namespace PatientsMicroService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

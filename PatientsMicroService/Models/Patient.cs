@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace PatientMicroService.Models
+namespace PatientsMicroService.Models
 {
 
     public enum Gender

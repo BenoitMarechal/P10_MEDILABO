@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -10,21 +9,14 @@ services:
     ports:
       - "1433:1433"
     platform: linux/amd64
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "Your_password123" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
-  identitymicroservice:
-    build:
-        context: .
-        dockerfile: IdentityMicroService/Dockerfile
-    container_name: identitymicroservice
-
-    platform: linux/amd64
-    ports:
-          - "5003:80"
-    environment:
-          - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=PatientsDb;User Id=sa;Password=Your_password123;Encrypt=True;TrustServerCertificate=True;
-    depends_on:
-          - sqlserver
-    
+  # Let patients service initialize the database first
   patientsmicroservice:
     build:
       context: .
@@ -36,7 +28,47 @@ services:
     environment:
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=PatientsDb;User Id=sa;Password=Your_password123;Encrypt=True;TrustServerCertificate=True;
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/patients", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Identity service starts after patients
+  identitymicroservice:
+    build:
+      context: .
+      dockerfile: IdentityMicroService/Dockerfile
+    container_name: identitymicroservice
+    platform: linux/amd64
+    ports:
+      - "5003:80"
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=PatientsDb;User Id=sa;Password=Your_password123;Encrypt=True;TrustServerCertificate=True;
+    depends_on:
+      patientsmicroservice:
+        condition: service_healthy
+
+  # Notes service starts after identity
+  notesmicroservice:
+    build:
+      context: .
+      dockerfile: NotesMicroService/Dockerfile
+    container_name: notesmicroservice
+    platform: linux/amd64
+    ports:
+      - "5002:80"
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=PatientsDb;User Id=sa;Password=Your_password123;Encrypt=True;TrustServerCertificate=True;
+    depends_on:
+      - identitymicroservice
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/notes", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
       
   frontendmicroservice:
     build:
@@ -47,7 +79,8 @@ services:
     ports:
       - "5069:8080"
       - "7199:8081"
-    # No depends_on ? frontend starts independently
+    depends_on:
+      - notesmicroservice
 
   apigateway:
     build:
@@ -59,4 +92,5 @@ services:
       - "5000:80"
     depends_on:
       - patientsmicroservice
+      - notesmicroservice
       - frontendmicroservice

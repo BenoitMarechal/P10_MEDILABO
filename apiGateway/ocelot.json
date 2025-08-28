@@ -12,6 +12,20 @@
       "UpstreamPathTemplate": "/patients/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     },
+
+    {
+      "DownstreamPathTemplate": "/api/notes/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notesmicroservice",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/notes/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+
     {
       "DownstreamPathTemplate": "/api/identity/{everything}",
       "DownstreamScheme": "http",

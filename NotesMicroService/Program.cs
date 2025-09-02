@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using NotesMicroService.Data;
+using NotesMicroService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,15 @@ builder.Services.AddSwaggerGen();
 
 // Configure to listen on all interfaces
 builder.WebHost.UseUrls("http://0.0.0.0:80");
+
+
+builder.Services.AddHttpClient("PatientsService", client =>
+{
+    client.BaseAddress = new Uri("http://patientsmicroservice:80/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+builder.Services.AddScoped<PatientsService>();
+
 
 var app = builder.Build();
 

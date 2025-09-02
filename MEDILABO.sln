@@ -26,7 +26,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityMicroService", "Ide
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NotesMicroService", "NotesMicroService", "{3CF3B23B-3CCB-4972-8DBD-3C9F3D9D2183}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotesMicroService", "NotesMicroService\NotesMicroService.csproj", "{0650C655-E246-431E-9274-3EFE8EE4B0A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotesMicroService", "NotesMicroService\NotesMicroService.csproj", "{0650C655-E246-431E-9274-3EFE8EE4B0A7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

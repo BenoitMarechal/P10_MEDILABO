@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using NotesMicroService.Data;
 using NotesMicroService.Models;
+using NotesMicroService.Services;
 
 namespace NotesMicroService.Controllers
 {
@@ -17,43 +18,6 @@ namespace NotesMicroService.Controllers
             _context = context;
             _logger = logger;
         }
-
-        // GET: api/notes
-        //[HttpGet]
-        //public async Task<ActionResult> GetAllNotes()
-        //{
-        //    return Ok("coucou");
-        //}
-
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<Note>>> GetAllNotes()
-        //{
-        //    try
-        //    {
-        //        _logger.LogInformation("Attempting to connect to database...");
-
-        //        // Test connection first
-        //        var canConnect = await _context.Database.CanConnectAsync();
-        //        if (!canConnect)
-        //        {
-        //            _logger.LogError("Cannot connect to database");
-        //            return StatusCode(500, "Cannot connect to database");
-        //        }
-
-        //        _logger.LogInformation("Database connection successful, querying notes...");
-
-        //        var notes = await _context.Notes.ToListAsync();
-        //        _logger.LogInformation("Found {NotesCount} notes", notes.Count);
-
-        //        return Ok(notes);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error retrieving all notes: {ErrorMessage}", ex.Message);
-        //        return StatusCode(500, $"Internal server error: {ex.Message}");
-        //    }
-        //}
-        // GET: api/notes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Note>>> GetAllNotes()
         {
@@ -110,18 +74,21 @@ namespace NotesMicroService.Controllers
             }
         }
 
-        // POST: api/notes
         [HttpPost]
-        public async Task<ActionResult<Note>> CreateNote(Note note)
+        public async Task<ActionResult<Note>> CreateNote(Note note, [FromServices] PatientsService patientsService)
         {
             try
             {
                 if (!ModelState.IsValid)
-                {
                     return BadRequest(ModelState);
-                }
 
-                note.Id = Guid.NewGuid(); // Ensure new GUID
+                // Or get full patient info if needed:
+                var patient = await patientsService.GetPatientAsync(note.PatientId);
+                if (patient == null)
+                    return BadRequest("Patient not found");
+
+
+                note.Id = Guid.NewGuid();
                 _context.Notes.Add(note);
                 await _context.SaveChangesAsync();
 
@@ -133,6 +100,8 @@ namespace NotesMicroService.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+    
 
         // PUT: api/notes/{id}
         [HttpPut("{id}")]

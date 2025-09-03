@@ -1,21 +1,36 @@
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using NotesMicroService.Data;
+using NotesMicroService.Models;
+using NotesMicroService.DTOs;
+using NotesMicroService.Repositories;
 using NotesMicroService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Configure MongoDB settings from appsettings
+builder.Services.Configure<MongoDbSettings>(
+    builder.Configuration.GetSection("MongoDbSettings"));
 
+// Register MongoClient singleton
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
+    return new MongoClient(settings.ConnectionString);
+});
+
+// Register Notes repository
+builder.Services.AddSingleton<NotesRepository>();
+
+// Register controllers
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure to listen on all interfaces
+// Configure to listen on all network interfaces
 builder.WebHost.UseUrls("http://0.0.0.0:80");
 
-
+// Register PatientsService HTTP client
 builder.Services.AddHttpClient("PatientsService", client =>
 {
     client.BaseAddress = new Uri("http://patientsmicroservice:80/");
@@ -23,60 +38,39 @@ builder.Services.AddHttpClient("PatientsService", client =>
 });
 builder.Services.AddScoped<PatientsService>();
 
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Swagger in development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// Authorization & routing
 app.UseAuthorization();
 app.MapControllers();
 
-// Replace this section in Program.cs:
+// Optional: test MongoDB connection at startup
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var mongoClient = scope.ServiceProvider.GetRequiredService<IMongoClient>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    var retryCount = 0;
-    var maxRetries = 15;
-    var delay = TimeSpan.FromSeconds(5);
-
-    while (retryCount < maxRetries)
+    try
     {
-        try
-        {
-            logger.LogInformation("Attempting to connect to database (attempt {Attempt}/{MaxRetries})",
-                retryCount + 1, maxRetries);
+        // Ping the database to ensure connection works
+        var settings = scope.ServiceProvider.GetRequiredService<IOptions<MongoDbSettings>>().Value;
+        var database = mongoClient.GetDatabase(settings.Database);
+        database.RunCommandAsync((Command<MongoDB.Bson.BsonDocument>)"{ping:1}").Wait();
 
-            await dbContext.Database.CanConnectAsync();
-
-            // Use Migrate() instead of EnsureCreatedAsync()
-            await dbContext.Database.MigrateAsync();
-
-            logger.LogInformation("Database migration successful");
-            break;
-        }
-        catch (Exception ex)
-        {
-            retryCount++;
-            logger.LogWarning("Database migration failed (attempt {Attempt}/{MaxRetries}): {Error}",
-                retryCount, maxRetries, ex.Message);
-
-            if (retryCount >= maxRetries)
-            {
-                logger.LogError("Max database migration retries exceeded. Application will exit.");
-                throw;
-            }
-
-            await Task.Delay(delay);
-        }
+        logger.LogInformation("Connected to MongoDB successfully");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError("Failed to connect to MongoDB: {Error}", ex.Message);
+        throw; // fail fast if MongoDB is unreachable
     }
 }
-
 
 app.Run();

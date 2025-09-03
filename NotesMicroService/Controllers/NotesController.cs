@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NotesMicroService.Data;
+using NotesMicroService.DTOs;
 using NotesMicroService.Models;
+using NotesMicroService.Repositories;
 using NotesMicroService.Services;
+
 
 namespace NotesMicroService.Controllers
 {
@@ -10,21 +11,25 @@ namespace NotesMicroService.Controllers
     [Route("api/[controller]")]
     public class NotesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+      //  private readonly ApplicationDbContext _context;
         private readonly ILogger<NotesController> _logger;
+        private readonly NotesRepository _repository;
 
-        public NotesController(ApplicationDbContext context, ILogger<NotesController> logger)
+        public NotesController( ILogger<NotesController> logger, NotesRepository repository)
         {
-            _context = context;
+         //   _context = context;
             _logger = logger;
+            _repository = repository;
         }
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Note>>> GetAllNotes()
         {
             try
             {
-                var notes = await _context.Notes.ToListAsync();
+                var notes = await _repository.GetAllAsync();
                 return Ok(notes);
+                //var notes = await _context.Notes.ToListAsync();
+                //return Ok(notes);
             }
             catch (Exception ex)
             {
@@ -39,7 +44,8 @@ namespace NotesMicroService.Controllers
         {
             try
             {
-                var note = await _context.Notes.FindAsync(id);
+                //var note = await _context.Notes.FindAsync(id);
+                var note = await _repository.GetByIdAsync(id);
 
                 if (note == null)
                 {
@@ -62,13 +68,16 @@ namespace NotesMicroService.Controllers
             try
             {
                 var patient= await patientsService.GetPatientAsync(patientId);
+
                 if(patient == null)
                     return NotFound($"Patient with ID {patientId} not found");
 
+              
+                var notes = await _repository.GetByPatientAsync(patientId);
 
-                var notes = await _context.Notes
-                    .Where(n => n.PatientId == patientId)
-                    .ToListAsync();
+                //var notes = await _context.Notes
+                //    .Where(n => n.PatientId == patientId)
+                //    .ToListAsync();
 
                 return Ok(notes);
             }
@@ -81,30 +90,26 @@ namespace NotesMicroService.Controllers
 
         // POST: api/notes/patient/{patientId}
         [HttpPost]
-        public async Task<ActionResult<Note>> CreateNote(Note note, [FromServices] PatientsService patientsService)
+        public async Task<ActionResult<Note>> CreateNote(CreateNoteDTO dto, [FromServices] PatientsService patientsService)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);    
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-                var patientExists = await patientsService.PatientExistsAsync(note.PatientId);
-                if(!patientExists)
-                    return BadRequest($"Patient with ID { note.PatientId} does not exist");
+            var patientExists = await patientsService.PatientExistsAsync(dto.PatientId);
+            if (!patientExists) return BadRequest($"Patient with ID {dto.PatientId} does not exist");
 
-                note.Id = Guid.NewGuid();
-                _context.Notes.Add(note);
-                await _context.SaveChangesAsync();
-                return CreatedAtAction(nameof(GetNote), new { id = note.Id }, note);
-            }
-            catch (Exception ex)
+            var note = new Note
             {
-                _logger.LogError(ex, "Error creating note");
-                return StatusCode(500, "Internal server error");
-            }
+                Id = Guid.NewGuid(),
+                PatientId = dto.PatientId,
+                Content = dto.Content,
+                
+            };
+
+            await _repository.CreateAsync(note);
+            return CreatedAtAction(nameof(GetNote), new { id = note.Id }, note);
         }
 
-    
+
 
         // PUT: api/notes/{id}
         [HttpPut("{id}")]
@@ -122,13 +127,14 @@ namespace NotesMicroService.Controllers
                     return BadRequest(ModelState);
                 }
 
-                _context.Entry(note).State = EntityState.Modified;
+               // _context.Entry(note).State = EntityState.Modified;
 
                 try
                 {
-                    await _context.SaveChangesAsync();
+                    await _repository.UpdateAsync(id, note);
+                    // await _context.SaveChangesAsync();
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (Exception)
                 {
                     if (!await NoteExists(id))
                     {
@@ -152,14 +158,16 @@ namespace NotesMicroService.Controllers
         {
             try
             {
-                var note = await _context.Notes.FindAsync(id);
+               // var note = await _context.Notes.FindAsync(id);
+               var note = await _repository.GetByIdAsync(id);
                 if (note == null)
                 {
                     return NotFound($"Note with ID {id} not found");
                 }
 
-                _context.Notes.Remove(note);
-                await _context.SaveChangesAsync();
+                await _repository.DeleteAsync(id);
+                //_context.Notes.Remove(note);
+                //await _context.SaveChangesAsync();
 
                 return NoContent();
             }
@@ -172,7 +180,8 @@ namespace NotesMicroService.Controllers
 
         private async Task<bool> NoteExists(Guid id)
         {
-            return await _context.Notes.AnyAsync(e => e.Id == id);
+           // return await _context.Notes.AnyAsync(e => e.Id == id);
+           return await _repository.GetByIdAsync(id) != null;
         }
     }
 }

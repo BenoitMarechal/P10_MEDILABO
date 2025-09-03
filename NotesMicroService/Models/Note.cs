@@ -1,13 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations;
 namespace NotesMicroService.Models
 {
     public class Note
     {
-        public Guid Id { get; set; }
-        [Required]
-        public Guid PatientId { get; set; }
 
-        [Required]
-        public string Content { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
+        public Guid Id { get; set; }
+
+
+        [BsonRepresentation(BsonType.String)]
+        public Guid PatientId { get; set; }
+        public string Content { get; set; } = null!;
     }
 }

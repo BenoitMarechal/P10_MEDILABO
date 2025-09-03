@@ -13,6 +13,15 @@ services:
       - sqlserver_data:/var/opt/mssql
     restart: unless-stopped
 
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
   # Let patients service initialize the database first
   patientsmicroservice:
     build:
@@ -53,9 +62,10 @@ services:
     ports:
       - "5002:80"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=PatientsDb;User Id=sa;Password=YourStrong@Passw0rd123;Encrypt=True;TrustServerCertificate=True;
+      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
+      - MongoDbSettings__Database=NotesDb
     depends_on:
-      - identitymicroservice
+      - mongodb
     restart: unless-stopped
       
   frontendmicroservice:
@@ -87,3 +97,4 @@ services:
 
 volumes:
   sqlserver_data:
+  mongo_data:  

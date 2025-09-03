@@ -6,8 +6,7 @@ namespace PatientsMicroService.Models
     public enum Gender
     {
         Male,
-        Female,
-        Other
+        Female,        
     }
     public class Patient
     {
@@ -20,6 +19,7 @@ namespace PatientsMicroService.Models
         [Required]
         public DateOnly BirthDate { get; set; }
         [Required]
+        [EnumDataType(typeof(Gender))]
         public Gender Gender { get; set; }
 
         public string Address { get; set; }

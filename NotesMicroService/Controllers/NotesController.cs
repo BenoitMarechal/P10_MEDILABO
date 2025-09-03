@@ -75,9 +75,6 @@ namespace NotesMicroService.Controllers
               
                 var notes = await _repository.GetByPatientAsync(patientId);
 
-                //var notes = await _context.Notes
-                //    .Where(n => n.PatientId == patientId)
-                //    .ToListAsync();
 
                 return Ok(notes);
             }

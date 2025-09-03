@@ -57,10 +57,15 @@ namespace NotesMicroService.Controllers
 
         // GET: api/notes/patient/{patientId}
         [HttpGet("patient/{patientId}")]
-        public async Task<ActionResult<IEnumerable<Note>>> GetNotesByPatient(Guid patientId)
+        public async Task<ActionResult<IEnumerable<Note>>> GetNotesByPatient(Guid patientId, [FromServices] PatientsService patientsService)
         {
             try
             {
+                var patient= await patientsService.GetPatientAsync(patientId);
+                if(patient == null)
+                    return NotFound($"Patient with ID {patientId} not found");
+
+
                 var notes = await _context.Notes
                     .Where(n => n.PatientId == patientId)
                     .ToListAsync();
@@ -74,24 +79,22 @@ namespace NotesMicroService.Controllers
             }
         }
 
+        // POST: api/notes/patient/{patientId}
         [HttpPost]
         public async Task<ActionResult<Note>> CreateNote(Note note, [FromServices] PatientsService patientsService)
         {
             try
             {
                 if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
+                    return BadRequest(ModelState);    
 
-                // Or get full patient info if needed:
-                var patient = await patientsService.GetPatientAsync(note.PatientId);
-                if (patient == null)
-                    return BadRequest("Patient not found");
-
+                var patientExists = await patientsService.PatientExistsAsync(note.PatientId);
+                if(!patientExists)
+                    return BadRequest($"Patient with ID { note.PatientId} does not exist");
 
                 note.Id = Guid.NewGuid();
                 _context.Notes.Add(note);
                 await _context.SaveChangesAsync();
-
                 return CreatedAtAction(nameof(GetNote), new { id = note.Id }, note);
             }
             catch (Exception ex)

@@ -102,6 +102,7 @@ namespace NotesMicroService.Controllers
                 Id = Guid.NewGuid(),
                 PatientId = dto.PatientId,
                 Content = dto.Content,
+                CreatedAt = DateTime.UtcNow
                 
             };
 

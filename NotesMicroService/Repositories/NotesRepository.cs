@@ -24,7 +24,9 @@ namespace NotesMicroService.Repositories
             await _notes.Find(n => n.Id == id).FirstOrDefaultAsync();
 
         public async Task<IEnumerable<Note>> GetByPatientAsync(Guid patientId) =>
-            await _notes.Find(n => n.PatientId == patientId).ToListAsync();
+            await _notes.Find(n => n.PatientId == patientId)
+            .SortByDescending(n => n.CreatedAt)            
+            .ToListAsync();
 
         public async Task CreateAsync(Note note) =>
             await _notes.InsertOneAsync(note);

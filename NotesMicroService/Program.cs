@@ -34,8 +34,11 @@ builder.WebHost.UseUrls("http://0.0.0.0:80");
 builder.Services.AddHttpClient("PatientsService", client =>
 {
     client.BaseAddress = new Uri("http://patientsmicroservice:80/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.Timeout = TimeSpan.FromSeconds(30);
 });
+
+
 builder.Services.AddScoped<PatientsService>();
 
 var app = builder.Build();

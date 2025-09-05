@@ -3,7 +3,7 @@ using PatientsMicroService.Models;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 
-namespace PatientsMicroService.Data
+namespace PatientsMicroService.Controllers.Data
 {
     public class ApplicationDbContext : DbContext
     {

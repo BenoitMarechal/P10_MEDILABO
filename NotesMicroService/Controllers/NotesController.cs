@@ -38,6 +38,32 @@ namespace NotesMicroService.Controllers
             }
         }
 
+        // test
+        [HttpGet("test-patient/{patientId}")]
+        public async Task<IActionResult> TestPatient(Guid patientId, [FromServices] PatientsService patientsService)
+        {
+            try
+            {
+                _logger.LogInformation("Testing patient lookup for {PatientId}", patientId);
+
+                var patient = await patientsService.GetPatientAsync(patientId);
+
+                if (patient == null)
+                {
+                    return Ok(new { Success = false, Message = "Patient not found or service unreachable" });
+                }
+
+                return Ok(new { Success = true, Patient = patient });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in test endpoint");
+                return Ok(new { Success = false, Error = ex.Message });
+            }
+        }
+
+        // test
+
         // GET: api/notes/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<Note>> GetNote(Guid id)
@@ -77,6 +103,34 @@ namespace NotesMicroService.Controllers
 
 
                 return Ok(notes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving notes for patient {PatientId}", patientId);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        // GET: api/notes/diagnosis/{patientId}
+        [HttpGet("diagnosis/{patientId}")]
+        public async Task<ActionResult<string>> GetDiagnosis(Guid patientId, [FromServices] PatientsService patientsService)
+        {
+            try
+            {
+                var patient = await patientsService.GetPatientAsync(patientId);
+
+                if (patient == null)
+                    return NotFound($"Patient with ID {patientId} not found");
+
+
+                var notes = await _repository.GetByPatientAsync(patientId);
+
+                var calculator = new DiabetesRiskCalculator();
+
+                var risk = calculator.CalculateRisk(patient, notes);
+
+
+                return Ok(risk);
             }
             catch (Exception ex)
             {

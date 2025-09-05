@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using NotesMicroService.DTOs;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace NotesMicroService.Services
 {
@@ -15,7 +17,7 @@ namespace NotesMicroService.Services
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
-            };
+            };           
         }
 
         public async Task<bool> PatientExistsAsync(Guid patientId)
@@ -32,7 +34,7 @@ namespace NotesMicroService.Services
             }
         }
 
-        public async Task<PatientDto?> GetPatientAsync(Guid patientId)
+        public async Task<PatientDTO> GetPatientAsync(Guid patientId)
         {
             try
             {
@@ -41,7 +43,8 @@ namespace NotesMicroService.Services
                     return null;
 
                 var content = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<PatientDto>(content, _jsonOptions);
+                _logger.LogInformation("Patient API response: {Content}", content);
+                return JsonSerializer.Deserialize<PatientDTO>(content, _jsonOptions);
             }
             catch (Exception ex)
             {
@@ -50,48 +53,48 @@ namespace NotesMicroService.Services
             }
         }
 
-        public async Task<IEnumerable<PatientDto>> GetAllPatientsAsync()
+        public async Task<IEnumerable<PatientDTO>> GetAllPatientsAsync()
         {
             try
             {
                 var response = await _httpClient.GetAsync("api/patients");
                 if (!response.IsSuccessStatusCode)
-                    return Enumerable.Empty<PatientDto>();
+                    return Enumerable.Empty<PatientDTO>();
 
                 var content = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<IEnumerable<PatientDto>>(content, _jsonOptions) ?? Enumerable.Empty<PatientDto>();
+                return JsonSerializer.Deserialize<IEnumerable<PatientDTO>>(content, _jsonOptions) ?? Enumerable.Empty<PatientDTO>();
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to get all patients");
-                return Enumerable.Empty<PatientDto>();
+                return Enumerable.Empty<PatientDTO>();
             }
         }
 
-        public async Task<bool> IsPatientActiveAsync(Guid patientId)
-        {
-            try
-            {
-                var patient = await GetPatientAsync(patientId);
-                return patient?.IsActive == true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to check if patient {PatientId} is active", patientId);
-                return false;
-            }
-        }
+        //public async Task<bool> IsPatientActiveAsync(Guid patientId)
+        //{
+        //    try
+        //    {
+        //        var patient = await GetPatientAsync(patientId);
+        //        return patient?.IsActive == true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogWarning(ex, "Failed to check if patient {PatientId} is active", patientId);
+        //        return false;
+        //    }
+        //}
     }
 
     // DTO to match your Patient model structure
-    public class PatientDto
-    {
-        public Guid Id { get; set; }
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public string? Email { get; set; }
-        public DateTime? DateOfBirth { get; set; }
-        public bool IsActive { get; set; } = true;
-        // Add other properties as needed
-    }
+    //public class PatientDTO
+    //{
+    //    public Guid Id { get; set; }
+    //    public string? FirstName { get; set; }
+    //    public string? LastName { get; set; }
+    //    public string? Email { get; set; }
+    //    public DateTime? DateOfBirth { get; set; }
+    //    //  public bool IsActive { get; set; } = true;
+    //    // Add other properties as needed
+    //}
 }

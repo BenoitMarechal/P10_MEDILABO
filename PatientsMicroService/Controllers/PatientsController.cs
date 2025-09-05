@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PatientsMicroService.Models;
-using PatientsMicroService.Data;
+using PatientsMicroService.Controllers.Data;
 
 namespace PatientsMicroService.Controllers
 {

@@ -1,62 +1,127 @@
 ﻿@page "/notes/patient/{id}"
 @model FrontEndMicroService.Pages.NotesModel
 @{
-    ViewData["Title"] = $"Notes for {Model.Patient?.FirstName} {Model.Patient?.LastName}";
+    ViewData["Title"] = "Patient Notes";
 }
 
+<style>
+    .diagnosis-none {
+        background-color: #6c757d !important; /* Gray - None */
+    }
+    .diagnosis-low {
+        background-color: #28a745 !important; /* Green - Borderline */
+    }
+    .diagnosis-medium {
+        background-color: #ffc107 !important; /* Yellow - In Danger */
+        color: #000 !important;
+    }
+    .diagnosis-high {
+        background-color: #dc3545 !important; /* Red - Early onset */
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        margin-right: 0.5rem;
+        min-width: fit-content;
+    }
+    
+    .info-value {
+        flex: 1;
+    }
+</style>
+
 <div class="container-fluid">
-    <!-- Header with Back Button -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/frontend/">Patients</a></li>
-                    <li class="breadcrumb-item active">Notes</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
+    <h1>Patient Notes</h1>
 
     @if (Model.Patient != null)
     {
-        <!-- Patient Information Section -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0">
-                                <i class="fas fa-user-circle me-2"></i>
-                                @Model.Patient.FirstName @Model.Patient.LastName
-                            </h4>
-                            <span class="badge bg-light text-primary">ID: @Model.PatientId</span>
+        <!-- Patient Information Card -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    @Model.Patient.FirstName @Model.Patient.LastName
+                </h5>
+                <small class="text-muted">ID: @Model.Patient.Id</small>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">Birth Date:</span>
+                            <span class="text-muted info-value">@Model.Patient.BirthDate.ToString("MMMM dd, yyyy")</span>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <strong>Birth Date:</strong><br>
-                                <span class="text-muted">@Model.Patient.BirthDate.ToString("MMMM dd, yyyy")</span>
-                            </div>
-                            <div class="col-md-2">
-                                <strong>Gender:</strong><br>
-                                <span class="badge bg-@(Model.Patient.Gender.ToString().ToLower() == "male" ? "info" : "pink") text-white">
-                                    @Model.Patient.Gender
-                                </span>
-                            </div>
-                            <div class="col-md-3">
-                                <strong>Phone:</strong><br>
-                                <span class="text-muted">@(Model.Patient.PhoneNumber ?? "Not provided")</span>
-                            </div>
-                            <div class="col-md-4">
-                                <strong>Address:</strong><br>
-                                <span class="text-muted">@(string.IsNullOrEmpty(Model.Patient.Address) ? "Not provided" : Model.Patient.Address)</span>
-                            </div>
-
-                            <div class="col-md-4">
-                                <strong>Diagnosis:</strong><br>
-                                <span class="text-muted">@(string.IsNullOrEmpty(Model.Diagnosis) ? "Not provided" : Model.Diagnosis)</span>
-                            </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">Gender:</span>
+                            <span class="badge bg-@(Model.Patient.Gender.ToString().ToLower() == "male" ? "info" : "pink") text-white">
+                                @Model.Patient.Gender
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">Phone:</span>
+                            <span class="text-muted info-value">@(Model.Patient.PhoneNumber ?? "Not provided")</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">Address:</span>
+                            <span class="text-muted info-value">
+                                @if (!string.IsNullOrWhiteSpace(Model.Patient.Address))
+                                {
+                                    @Model.Patient.Address
+                                }
+                                else
+                                {
+                                    <em>Not provided</em>
+                                }
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <div class="info-item">
+                            <span class="info-label">Diabetes Risk:</span>
+                            @{
+                                string diagnosisClass = "diagnosis-none";
+                                string diagnosis = Model.Diagnosis ?? "Not provided";
+                                
+                                // Match the diabetes risk calculation values with increasing severity
+                                switch (Model.Diagnosis?.Trim())
+                                {
+                                    case "None":
+                                        diagnosisClass = "diagnosis-none";    // Gray - No diabetes risk
+                                        break;
+                                    case "Borderline":
+                                        diagnosisClass = "diagnosis-low";     // Green - Borderline diabetes risk
+                                        break;
+                                    case "In Danger":
+                                        diagnosisClass = "diagnosis-medium";  // Yellow - In danger of diabetes
+                                        break;
+                                    case "Early onset":
+                                        diagnosisClass = "diagnosis-high";    // Red - Early onset diabetes risk (highest severity)
+                                        break;
+                                    default:
+                                        diagnosisClass = "diagnosis-none";    // Gray for any other value
+                                        break;
+                                }
+                            }
+                            
+                            <span class="badge @diagnosisClass text-white">@diagnosis</span>
                         </div>
                     </div>
                 </div>
@@ -64,214 +129,63 @@
         </div>
 
         <!-- Notes Section -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-notes-medical me-2"></i>
-                            Medical Notes
-                            <span class="badge bg-secondary ms-2">@Model.Notes.Count</span>
-                        </h5>
-                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addNoteModal">
-                            <i class="fas fa-plus me-1"></i>Add New Note
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        @if (Model.Notes.Any())
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-sticky-note me-2"></i>
+                    Medical Notes (@Model.Notes.Count)
+                </h5>
+                <a href="/notes/add?patientId=@Model.PatientId" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Add Note
+                </a>
+            </div>
+            <div class="card-body">
+                @if (Model.Notes.Any())
+                {
+                    <div class="row">
+                        @foreach (var note in Model.Notes.OrderByDescending(n => n.CreatedAt))
                         {
-                            <div class="timeline">
-                                @foreach (var note in Model.Notes.OrderByDescending(n => n.CreatedAt))
-                                {
-                                    <div class="timeline-item">
-                                        <div class="timeline-marker">
-                                            <i class="fas fa-sticky-note text-primary"></i>
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100 border-start border-primary border-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title mb-0">Note #@note.Id</h6>
+                                            <small class="text-muted">
+                                                @note.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")
+                                            </small>
                                         </div>
-                                        <div class="timeline-content">
-                                            <div class="card mb-3">
-                                                <div class="card-header d-flex justify-content-between align-items-center py-2">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-calendar-alt me-1"></i>
-                                                        @note.CreatedAt.ToString("MMMM dd, yyyy 'at' HH:mm")
-                                                    </small>
-                                                    <div class="btn-group">
-                                                        <button class="btn btn-outline-primary btn-sm" title="Edit Note">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                        <button class="btn btn-outline-danger btn-sm" title="Delete Note" 
-                                                                onclick="confirmDelete('@note.Id')">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="note-content">
-                                                        @Html.Raw(Html.Encode(note.Content).Replace("\n", "<br />"))
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <p class="card-text">@note.Content</p>
+                                       @*  @if (!string.IsNullOrEmpty(note.Author))
+                                        {
+                                            <small class="text-muted">
+                                                <i class="fas fa-user-md me-1"></i>@note.Author
+                                            </small>
+                                        } *@
                                     </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="text-center py-5">
-                                <div class="mb-4">
-                                    <i class="fas fa-notes-medical fa-4x text-muted"></i>
                                 </div>
-                                <h5 class="text-muted mb-3">No Medical Notes</h5>
-                                <p class="text-muted mb-4">
-                                    This patient doesn't have any medical notes yet.<br>
-                                    Click the button below to add the first note.
-                                </p>
-                                <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#addNoteModal">
-                                    <i class="fas fa-plus me-2"></i>Add First Note
-                                </button>
                             </div>
                         }
                     </div>
-                </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-muted">No Notes Available</h5>
+                        <p class="text-muted">No medical notes have been recorded for this patient yet.</p>
+                        <a href="/notes/add?patientId=@Model.PatientId" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-1"></i>Add First Note
+                        </a>
+                    </div>
+                }
             </div>
         </div>
     }
     else
     {
-        <!-- Error State -->
-        <div class="row">
-            <div class="col-12">
-                <div class="alert alert-danger shadow-sm" role="alert">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
-                        <div>
-                            <h4 class="alert-heading">Patient Not Found</h4>
-                            <p class="mb-0">The requested patient could not be found or there was an error loading the data.</p>
-                            <hr>
-                            <a href="/frontend/" class="btn btn-primary">
-                                <i class="fas fa-arrow-left me-1"></i>Return to Patient List
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="alert alert-warning" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Patient information could not be loaded.
         </div>
     }
 </div>
-
-<!-- Add Note Modal (for future functionality) -->
-<div class="modal fade" id="addNoteModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-plus-circle me-2"></i>Add New Medical Note
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label for="noteContent" class="form-label">Note Content</label>
-                        <textarea class="form-control" id="noteContent" rows="6" 
-                                  placeholder="Enter medical note details..."></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary">
-                    <i class="fas fa-save me-1"></i>Save Note
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .timeline {
-        position: relative;
-        padding-left: 30px;
-    }
-    
-    .timeline::before {
-        content: '';
-        position: absolute;
-        left: 15px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: #e9ecef;
-    }
-    
-    .timeline-item {
-        position: relative;
-        margin-bottom: 20px;
-    }
-    
-    .timeline-marker {
-        position: absolute;
-        left: -22px;
-        top: 10px;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        background: white;
-        border: 2px solid #e9ecef;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1;
-    }
-    
-    .timeline-content {
-        margin-left: 15px;
-    }
-    
-    .note-content {
-        line-height: 1.6;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-    
-    .card {
-        border: none;
-        transition: all 0.3s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
-    }
-    
-    .badge.bg-pink {
-        background-color: #e83e8c !important;
-    }
-    
-    .breadcrumb {
-        background-color: transparent;
-        padding: 0;
-    }
-    
-    .breadcrumb-item a {
-        text-decoration: none;
-    }
-    
-    .btn-group .btn {
-        margin-right: 2px;
-    }
-    
-    .btn-group .btn:last-child {
-        margin-right: 0;
-    }
-</style>
-
-<script>
-    function confirmDelete(noteId) {
-        if (confirm('Are you sure you want to delete this note? This action cannot be undone.')) {
-            // TODO: Implement delete functionality
-            console.log('Delete note:', noteId);
-            alert('Delete functionality will be implemented here');
-        }
-    }
-</script>

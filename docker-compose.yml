@@ -75,7 +75,7 @@ services:
     container_name: frontendmicroservice
     platform: linux/amd64
     ports:
-      - "5069:8080"
+      - "5004:8080"
       - "7199:8081"
     depends_on:
       - notesmicroservice

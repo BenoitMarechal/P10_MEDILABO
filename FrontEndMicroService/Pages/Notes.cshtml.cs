@@ -121,5 +121,31 @@ namespace FrontEndMicroService.Pages
                 Diagnosis = "Error retrieving diagnosis";
             }
         }
+
+        public async Task<IActionResult> OnPostDeleteNoteAsync(int noteId)
+        {
+            try
+            {
+                _logger.LogInformation("Attempting to delete note {NoteId}", noteId);
+                var response = await _httpClient.DeleteAsync($"notes/{noteId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Successfully deleted note {NoteId}", noteId);
+                    return RedirectToPage(new { id = PatientId });
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to delete note {NoteId}. Status: {StatusCode}", noteId, response.StatusCode);
+                    // Still redirect to refresh the page, but maybe add an error message
+                    return RedirectToPage(new { id = PatientId });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting note {NoteId}", noteId);
+                return RedirectToPage(new { id = PatientId });
+            }
+        }
     }
 }

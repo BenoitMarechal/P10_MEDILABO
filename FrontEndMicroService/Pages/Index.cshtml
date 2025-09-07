@@ -35,6 +35,18 @@ else
                     <td>@patient.Address</td>
                     <td>@patient.PhoneNumber</td>
                     <td>@patient.Age</td>
+                    <td>
+                        <a href="/notes/patient/@patient.Id"
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-sticky-note"></i> See Notes
+                        </a>
+                    </td>
+                    <td>
+                        <a href="/notes/diagnosis/@patient.Id"
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-sticky-note"></i> See Diagnosis
+                        </a>
+                    </td>
                 </tr>
             }
         </tbody>

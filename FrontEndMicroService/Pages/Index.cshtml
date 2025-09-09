@@ -4,7 +4,13 @@
     ViewData["Title"] = "Patients";
 }
 
-<h1 class="mb-4">Patients</h1>
+<div class="d-flex w-100 justify-content-between align-items-center">
+    <h1 class="mb-4">Patients</h1>
+    <a href="/patients/create"
+       class="btn btn-primary btn-sm">
+        <i class="fas fa-plus"></i> Add patient
+    </a>
+</div>
 
 @if (!Model.Patients.Any())
 {
@@ -38,9 +44,17 @@ else
                     <td>
                         <a href="/notes/patient/@patient.Id"
                            class="btn btn-primary btn-sm">
-                            <i class="fas fa-sticky-note"></i> See Notes
+                            <i class="fas fa-sticky-note"></i> See Details
                         </a>
-                    </td>                   
+                    </td>
+                    <td>
+                        <form method="post" asp-page-handler="Delete" asp-route-id="@patient.Id"
+                              onsubmit="return confirm('Are you sure you want to delete this patient?');">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

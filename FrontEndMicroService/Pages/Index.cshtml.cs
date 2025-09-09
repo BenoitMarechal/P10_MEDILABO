@@ -38,5 +38,26 @@ namespace FrontEndMicroService.Pages
                 _logger.LogError(ex, "Failed to fetch patients through Ocelot gateway");
             }
         }
+
+        public async Task<IActionResult> OnPostDeleteAsync(Guid id)
+        {
+            try
+            {
+                // Sends DELETE to your backend microservice as a route: patients/{id}
+                var response = await _httpClient.DeleteAsync($"patients/{id}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Failed to delete patient {Id}: {StatusCode}", id, response.StatusCode);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception while deleting patient {Id}", id);
+            }
+
+            // Refresh the current page
+            return RedirectToPage();
+        }
+
     }
 }

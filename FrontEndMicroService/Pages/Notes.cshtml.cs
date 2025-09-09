@@ -21,6 +21,9 @@ namespace FrontEndMicroService.Pages
             _httpClient = httpClientFactory.CreateClient("Patients");
         }
 
+        [BindProperty]
+        public string NewNoteContent { get; set; } = string.Empty;
+
         public async Task<IActionResult> OnGetAsync(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -122,30 +125,61 @@ namespace FrontEndMicroService.Pages
             }
         }
 
-        public async Task<IActionResult> OnPostDeleteNoteAsync(int noteId)
+        public async Task<IActionResult> OnPostDeleteNoteAsync(Guid id, Guid noteId)
         {
+            // `id` = patientId (from route /notes/patient/{id})
+            // `noteId` = note being deleted
+
+            var response = await _httpClient.DeleteAsync($"notes/{noteId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ModelState.AddModelError(string.Empty, "Failed to delete note.");
+                return Page();
+            }
+
+            // Refresh page with same patient id
+            return RedirectToPage(new { id });
+        }
+
+        public async Task<IActionResult> OnPostAddNoteAsync(string id)
+        {
+            if (string.IsNullOrWhiteSpace(NewNoteContent))
+            {
+                ModelState.AddModelError("NewNoteContent", "Note content cannot be empty.");
+                return await OnGetAsync(id); // reload page with validation error
+            }
+
             try
             {
-                _logger.LogInformation("Attempting to delete note {NoteId}", noteId);
-                var response = await _httpClient.DeleteAsync($"notes/{noteId}");
+                var newNote = new
+                {
+                    PatientId = id,
+                    Content = NewNoteContent
+                };
+
+                var response = await _httpClient.PostAsJsonAsync("notes", newNote);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("Successfully deleted note {NoteId}", noteId);
-                    return RedirectToPage(new { id = PatientId });
+                    _logger.LogInformation("Successfully added note for patient {PatientId}", id);
+                    return RedirectToPage(new { id }); // reload notes list
                 }
                 else
                 {
-                    _logger.LogWarning("Failed to delete note {NoteId}. Status: {StatusCode}", noteId, response.StatusCode);
-                    // Still redirect to refresh the page, but maybe add an error message
-                    return RedirectToPage(new { id = PatientId });
+                    _logger.LogWarning("Failed to add note for patient {PatientId}. Status: {StatusCode}",
+                        id, response.StatusCode);
+                    ModelState.AddModelError("", "Failed to add note. Please try again.");
+                    return await OnGetAsync(id);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting note {NoteId}", noteId);
-                return RedirectToPage(new { id = PatientId });
+                _logger.LogError(ex, "Error adding note for patient {PatientId}", id);
+                ModelState.AddModelError("", "Unexpected error while adding note.");
+                return await OnGetAsync(id);
             }
         }
+
     }
 }

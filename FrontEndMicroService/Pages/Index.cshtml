@@ -47,6 +47,16 @@ else
                             <i class="fas fa-sticky-note"></i> See Details
                         </a>
                     </td>
+
+                    <td>
+                        <a asp-page="/Patients/Edit" asp-route-id="@patient.Id"
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                    </td>
+
+
+
                     <td>
                         <form method="post" asp-page-handler="Delete" asp-route-id="@patient.Id"
                               onsubmit="return confirm('Are you sure you want to delete this patient?');">

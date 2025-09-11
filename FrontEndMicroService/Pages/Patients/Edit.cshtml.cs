@@ -1,6 +1,7 @@
 using FrontEndMicroService.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Net.Http;
 using System.Text.Json;
 
 namespace FrontEndMicroService.Pages.Patients
@@ -19,8 +20,12 @@ namespace FrontEndMicroService.Pages.Patients
             }
 
             public async Task<IActionResult> OnGetAsync(Guid id)
-            {
-                Patient = await _httpClient.GetFromJsonAsync<PatientDTO>($"patients/{id}");
+        {// Check if user is logged in
+            var token = HttpContext.Session.GetString("JWT");
+            _httpClient.DefaultRequestHeaders.Authorization =
+                   new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            Patient = await _httpClient.GetFromJsonAsync<PatientDTO>($"patients/{id}");
                 if (Patient == null) return NotFound();
                 return Page();
             }
@@ -29,8 +34,11 @@ namespace FrontEndMicroService.Pages.Patients
             {
                 if (!ModelState.IsValid)
                     return Page();
+            var token = HttpContext.Session.GetString("JWT");
+            _httpClient.DefaultRequestHeaders.Authorization =
+                   new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.PutAsJsonAsync($"patients/{Patient.Id}", Patient);
+            var response = await _httpClient.PutAsJsonAsync($"patients/{Patient.Id}", Patient);
 
                 if (!response.IsSuccessStatusCode)
                 {

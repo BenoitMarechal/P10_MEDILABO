@@ -1,6 +1,7 @@
 using FrontEndMicroService.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Net.Http;
 using System.Text.Json;
 
 namespace FrontEndMicroService.Pages.Patients
@@ -26,6 +27,8 @@ namespace FrontEndMicroService.Pages.Patients
 
         public async Task<IActionResult> OnPostAsync()
         {
+            var token = HttpContext.Session.GetString("JWT");
+
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Model validation failed. Errors: {Errors}",
@@ -35,6 +38,9 @@ namespace FrontEndMicroService.Pages.Patients
 
             try
             {
+                // Add JWT token to request
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                 _logger.LogInformation("Creating new patient: {FirstName} {LastName}", Patient.FirstName, Patient.LastName);
                 _logger.LogInformation("Client base address: {BaseAddress}", _httpClient.BaseAddress);
 

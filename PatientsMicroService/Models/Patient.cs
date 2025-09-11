@@ -23,9 +23,9 @@ namespace PatientsMicroService.Models
         public Gender Gender { get; set; }
 
 
-        public string Address { get; set; }
+        public string? Address { get; set; }
 
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
         //  public int Age => DateTime.Now.Year - BirthDate.Year;
 
         public int Age

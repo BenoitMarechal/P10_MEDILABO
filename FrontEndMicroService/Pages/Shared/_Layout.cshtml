@@ -1,4 +1,5 @@
-﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+﻿@using Microsoft.AspNetCore.Http
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <!DOCTYPE html>
 <html lang="en">
@@ -33,6 +34,19 @@
                             <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
                         </li>
                     </ul>
+                </div>
+                <!-- User greeting + Logout -->
+                <div class="d-flex">
+                    @if (Context.Session.GetString("Username") != null)
+                    {
+                        <span class="navbar-text me-3">
+                            Welcome, @Context.Session.GetString("Username")!
+                        </span>
+
+                        <form asp-page="/Logout" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                        </form>
+                    }                  
                 </div>
             </div>
         </nav>

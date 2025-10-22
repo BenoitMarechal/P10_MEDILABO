@@ -69,7 +69,7 @@ This project uses the following NuGet dependencies:
 
 ---
 
-##  Start the Application
+#  Start the Application
 
 1. Make sure **Docker Desktop** is running.  
 2. Open a terminal at the root of the project.  
@@ -83,7 +83,7 @@ This will build and start all the services defined in the `docker-compose.yml` f
 
 ---
 
-##  Stop the Application
+#  Stop the Application
 
 To stop all running services, run:
 
@@ -93,7 +93,7 @@ docker-compose down
 
 ---
 
-##  Microservices
+#  Microservices
 
 The application consists of the following microservices:
 
@@ -105,7 +105,7 @@ The application consists of the following microservices:
 
 ---
 
-##  Entities
+#  Entities
 
 Main entities in this project are:
 
@@ -115,7 +115,7 @@ Main entities in this project are:
 
 ---
 
-##  Login
+#  Login
 
 - Authentication is handled via **JWT tokens**.  
 - Each service (except API Gateway and FrontEnd) requires a valid JWT token for access.  
@@ -133,7 +133,7 @@ Use **Postman** or any API client to send a POST request with the credentials ab
 
 ---
 
-##  Ports
+#  Ports
 
 The application uses the following ports:
 

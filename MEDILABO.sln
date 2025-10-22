@@ -28,8 +28,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NotesMicroService", "NotesM
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotesMicroService", "NotesMicroService\NotesMicroService.csproj", "{0650C655-E246-431E-9274-3EFE8EE4B0A7}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DiagnosisMicroService", "DiagnosisMicroService", "{A12F7C3F-6F31-4A8B-B9BA-81E3A49ECADC}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

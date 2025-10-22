@@ -3,10 +3,12 @@ using NotesMicroService.DTOs;
 using NotesMicroService.Models;
 using NotesMicroService.Repositories;
 using NotesMicroService.Services;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace NotesMicroService.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class NotesController : ControllerBase

@@ -25,7 +25,6 @@ public class IdentityController : ControllerBase
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginRequest request)
     {
-        // TODO: Replace with actual user validation from database
         if (ValidateUser(request.Username, request.Password))
         {
             var token = _jwtService.GenerateToken(request.Username, new[] { "User" });

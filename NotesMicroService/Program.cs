@@ -5,6 +5,8 @@ using NotesMicroService.Models;
 using NotesMicroService.DTOs;
 using NotesMicroService.Repositories;
 using NotesMicroService.Services;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,8 +29,25 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("M2U2NmMzMjQtNGIwOS00ZWVmLWIzOGYtZTYzZDE3ZjZkZGJkMzM1MGIzNmEtOWI4OC00ZTVjLThiZWMtNjhlZGVlMTg5YmJi")),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 // Configure to listen on all network interfaces
 builder.WebHost.UseUrls("http://0.0.0.0:80");
+
+builder.Services.AddHttpContextAccessor();
 
 // Register PatientsService HTTP client
 builder.Services.AddHttpClient("PatientsService", client =>

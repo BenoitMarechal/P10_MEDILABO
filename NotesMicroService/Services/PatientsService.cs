@@ -9,21 +9,35 @@ namespace NotesMicroService.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<PatientsService> _logger;
         private readonly JsonSerializerOptions _jsonOptions;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public PatientsService(IHttpClientFactory httpClientFactory, ILogger<PatientsService> logger)
+        public PatientsService(IHttpClientFactory httpClientFactory, ILogger<PatientsService> logger, IHttpContextAccessor httpContextAccessor)
         {
             _httpClient = httpClientFactory.CreateClient("PatientsService");
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
-            };           
+            };
+        }
+
+        private void AddAuthHeader()
+        {
+            var token = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+            if (!string.IsNullOrEmpty(token))
+            {
+                // Ensure we only set once to avoid duplicate headers
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Replace("Bearer ", ""));
+            }
         }
 
         public async Task<bool> PatientExistsAsync(Guid patientId)
         {
             try
             {
+                AddAuthHeader();
                 var response = await _httpClient.GetAsync($"api/patients/{patientId}");
                 return response.IsSuccessStatusCode;
             }
@@ -34,10 +48,11 @@ namespace NotesMicroService.Services
             }
         }
 
-        public async Task<PatientDTO> GetPatientAsync(Guid patientId)
+        public async Task<PatientDTO?> GetPatientAsync(Guid patientId)
         {
             try
             {
+                AddAuthHeader();
                 var response = await _httpClient.GetAsync($"api/patients/{patientId}");
                 if (!response.IsSuccessStatusCode)
                     return null;
@@ -57,6 +72,7 @@ namespace NotesMicroService.Services
         {
             try
             {
+                AddAuthHeader();
                 var response = await _httpClient.GetAsync("api/patients");
                 if (!response.IsSuccessStatusCode)
                     return Enumerable.Empty<PatientDTO>();
@@ -70,31 +86,5 @@ namespace NotesMicroService.Services
                 return Enumerable.Empty<PatientDTO>();
             }
         }
-
-        //public async Task<bool> IsPatientActiveAsync(Guid patientId)
-        //{
-        //    try
-        //    {
-        //        var patient = await GetPatientAsync(patientId);
-        //        return patient?.IsActive == true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogWarning(ex, "Failed to check if patient {PatientId} is active", patientId);
-        //        return false;
-        //    }
-        //}
     }
-
-    // DTO to match your Patient model structure
-    //public class PatientDTO
-    //{
-    //    public Guid Id { get; set; }
-    //    public string? FirstName { get; set; }
-    //    public string? LastName { get; set; }
-    //    public string? Email { get; set; }
-    //    public DateTime? DateOfBirth { get; set; }
-    //    //  public bool IsActive { get; set; } = true;
-    //    // Add other properties as needed
-    //}
 }

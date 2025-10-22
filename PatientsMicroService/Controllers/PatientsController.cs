@@ -2,9 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using PatientsMicroService.Models;
 using PatientsMicroService.Controllers.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PatientsMicroService.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PatientsController : ControllerBase

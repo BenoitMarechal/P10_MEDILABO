@@ -1,4 +1,3 @@
-// Controllers/IdentityController.cs
 using IdentityMicroService.Models;
 using IdentityMicroService.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -14,14 +13,14 @@ public class IdentityController : ControllerBase
         _jwtService = jwtService;
     }
 
-    // Your existing GET endpoint that works
+    
     [HttpGet]
     public IActionResult Get()
     {
         return Ok(new { message = "Identity service is running" });
     }
 
-    // Add the auth endpoints here
+  
     [HttpPost("login")]
     public IActionResult Login([FromBody] LoginRequest request)
     {

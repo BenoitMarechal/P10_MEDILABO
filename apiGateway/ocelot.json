@@ -10,11 +10,7 @@
         }
       ],
       "UpstreamPathTemplate": "/patients/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
-      //"AuthenticationOptions": {
-      //  "AuthenticationProviderKey": "Bearer",
-      //  "AllowedScopes": []
-      //}
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]     
     },
 
     {
@@ -28,10 +24,6 @@
       ],
       "UpstreamPathTemplate": "/notes/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
-      //"AuthenticationOptions": {
-      //  "AuthenticationProviderKey": "Bearer",
-      //  "AllowedScopes": []
-      //}
     },
 
     {

@@ -40,31 +40,6 @@ namespace NotesMicroService.Controllers
             }
         }
 
-        // test
-        [HttpGet("test-patient/{patientId}")]
-        public async Task<IActionResult> TestPatient(Guid patientId, [FromServices] PatientsService patientsService)
-        {
-            try
-            {
-                _logger.LogInformation("Testing patient lookup for {PatientId}", patientId);
-
-                var patient = await patientsService.GetPatientAsync(patientId);
-
-                if (patient == null)
-                {
-                    return Ok(new { Success = false, Message = "Patient not found or service unreachable" });
-                }
-
-                return Ok(new { Success = true, Patient = patient });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in test endpoint");
-                return Ok(new { Success = false, Error = ex.Message });
-            }
-        }
-
-        // test
 
         // GET: api/notes/{id}
         [HttpGet("{id}")]
@@ -212,16 +187,13 @@ namespace NotesMicroService.Controllers
         {
             try
             {
-               // var note = await _context.Notes.FindAsync(id);
-               var note = await _repository.GetByIdAsync(id);
+                var note = await _repository.GetByIdAsync(id);
                 if (note == null)
                 {
                     return NotFound($"Note with ID {id} not found");
                 }
 
-                await _repository.DeleteAsync(id);
-                //_context.Notes.Remove(note);
-                //await _context.SaveChangesAsync();
+                await _repository.DeleteAsync(id);          
 
                 return NoContent();
             }

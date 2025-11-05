@@ -15,14 +15,9 @@ namespace NotesMicroService.Services
         public string CalculateRisk(PatientDTO patient, IEnumerable<Note> notes)
         {
             int triggerCount = CountTriggers(notes);
-
-         
-            // No triggers = No risk
             if (triggerCount == 0) return "None";
-
             bool isOver30 = patient.Age > 30;
             bool isMale = patient.Gender == Gender.Male;
-
             if (isOver30)
             {
                 if (triggerCount >= 8) return "Early onset";
@@ -42,7 +37,6 @@ namespace NotesMicroService.Services
                     if (triggerCount >= 4) return "In Danger";
                 }
             }
-
             return "None";
         }
 
@@ -52,7 +46,6 @@ namespace NotesMicroService.Services
                 .SelectMany(note => TriggerTerms.Where(term =>
                     note.Content.Contains(term, StringComparison.OrdinalIgnoreCase)))
                 .Distinct()
-                .Count();
-        }
+                .Count();        }
     }
 }

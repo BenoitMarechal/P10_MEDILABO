@@ -21,26 +21,18 @@ namespace PatientsMicroService.Models
         [Required]
         [EnumDataType(typeof(Gender))]
         public Gender Gender { get; set; }
-
-
         public string? Address { get; set; }
-
         public string? PhoneNumber { get; set; }
-        //  public int Age => DateTime.Now.Year - BirthDate.Year;
-
         public int Age
         {
             get
             {
                 var today = DateOnly.FromDateTime(DateTime.Today);
                 var age = today.Year - BirthDate.Year;
-
-                // If the birthday hasn't happened yet this year, subtract 1
                 if (today.CompareTo(BirthDate.AddYears(age)) < 0)
                 {
                     age--;
                 }
-
                 return age;
             }
         }

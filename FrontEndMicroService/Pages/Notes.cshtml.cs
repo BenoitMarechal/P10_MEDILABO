@@ -2,6 +2,7 @@ using FrontEndMicroService.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace FrontEndMicroService.Pages
@@ -9,26 +10,45 @@ namespace FrontEndMicroService.Pages
     public class NotesModel : PageModel
     {
         private readonly ILogger<NotesModel> _logger;
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
+
         public List<NoteDTO> Notes { get; set; } = new();
         public PatientDTO? Patient { get; set; }
         public string Diagnosis { get; set; } = string.Empty;
-
         public string? PatientId { get; set; }
 
-        public NotesModel(ILogger<NotesModel> logger, IHttpClientFactory httpClientFactory)
+        public NotesModel(ILogger<NotesModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _logger = logger;
-            _httpClient = httpClientFactory.CreateClient("Patients");
+            _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
         [BindProperty]
         public string NewNoteContent { get; set; } = string.Empty;
 
+        private HttpClient CreateAuthenticatedClient()
+        {
+            var token = HttpContext.Session.GetString("JWT");
+            var gatewayBaseUrl = _configuration["ApiGateway:BaseUrl"] ?? "http://apigateway:5000";
+
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.BaseAddress = new Uri($"{gatewayBaseUrl}/");
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+
+            return httpClient;
+        }
+
         public async Task<IActionResult> OnGetAsync(string id)
         {
             // Check if user is logged in
             var token = HttpContext.Session.GetString("JWT");
+
             if (string.IsNullOrEmpty(token))
             {
                 return RedirectToPage("/Login");
@@ -43,12 +63,11 @@ namespace FrontEndMicroService.Pages
 
             try
             {
-                // Add JWT token to request
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                var httpClient = CreateAuthenticatedClient();
+
                 // Fetch patient information
                 _logger.LogInformation("Fetching patient information for ID: {PatientId}", id);
-                Patient = await _httpClient.GetFromJsonAsync<PatientDTO>($"patients/{id}");
+                Patient = await httpClient.GetFromJsonAsync<PatientDTO>($"patients/{id}");
 
                 if (Patient == null)
                 {
@@ -59,10 +78,10 @@ namespace FrontEndMicroService.Pages
                 _logger.LogInformation("Fetching notes for patient ID: {PatientId}", id);
                 var notesUrl = $"notes/patient/{id}";
                 _logger.LogInformation("Calling notes endpoint: {Url}", notesUrl);
-                Notes = await _httpClient.GetFromJsonAsync<List<NoteDTO>>(notesUrl) ?? new List<NoteDTO>();
+                Notes = await httpClient.GetFromJsonAsync<List<NoteDTO>>(notesUrl) ?? new List<NoteDTO>();
                 _logger.LogInformation("Found {Count} notes for patient {PatientName}", Notes.Count, $"{Patient.FirstName} {Patient.LastName}");
 
-                // Fetch diagnosis for this patient - improved error handling
+                // Fetch diagnosis for this patient
                 _logger.LogInformation("Fetching diagnosis for patient ID: {PatientId}", id);
                 await FetchDiagnosisAsync(id);
 
@@ -84,14 +103,10 @@ namespace FrontEndMicroService.Pages
 
         private async Task FetchDiagnosisAsync(string patientId)
         {
-            // Check if user is logged in           
-            var token = HttpContext.Session.GetString("JWT");
             try
             {
-                // Add JWT token to request
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.GetAsync($"notes/diagnosis/{patientId}");
+                var httpClient = CreateAuthenticatedClient();
+                var response = await httpClient.GetAsync($"notes/diagnosis/{patientId}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -116,7 +131,7 @@ namespace FrontEndMicroService.Pages
                     }
                     catch (JsonException)
                     {
-                        _logger.LogWarning("Exception that I can't log");
+                        _logger.LogWarning("Response was not valid JSON, treating as plain text");
                         // If it's not valid JSON, treat as plain text
                         Diagnosis = content.Trim('"');
                     }
@@ -146,12 +161,9 @@ namespace FrontEndMicroService.Pages
         {
             // `id` = patientId (from route /notes/patient/{id})
             // `noteId` = note being deleted
-            var token = HttpContext.Session.GetString("JWT");
-            _httpClient.DefaultRequestHeaders.Authorization =
-                   new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            var httpClient = CreateAuthenticatedClient();
 
-
-            var response = await _httpClient.DeleteAsync($"notes/{noteId}");
+            var response = await httpClient.DeleteAsync($"notes/{noteId}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -165,7 +177,6 @@ namespace FrontEndMicroService.Pages
 
         public async Task<IActionResult> OnPostAddNoteAsync(string id)
         {
-            var token = HttpContext.Session.GetString("JWT");
             if (string.IsNullOrWhiteSpace(NewNoteContent))
             {
                 ModelState.AddModelError("NewNoteContent", "Note content cannot be empty.");
@@ -174,15 +185,15 @@ namespace FrontEndMicroService.Pages
 
             try
             {
-            _httpClient.DefaultRequestHeaders.Authorization =
-                   new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                var httpClient = CreateAuthenticatedClient();
+
                 var newNote = new
                 {
                     PatientId = id,
                     Content = NewNoteContent
                 };
 
-                var response = await _httpClient.PostAsJsonAsync("notes", newNote);
+                var response = await httpClient.PostAsJsonAsync("notes", newNote);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -204,6 +215,5 @@ namespace FrontEndMicroService.Pages
                 return await OnGetAsync(id);
             }
         }
-
     }
 }

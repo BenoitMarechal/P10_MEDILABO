@@ -1,6 +1,8 @@
 using FrontEndMicroService.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace FrontEndMicroService.Pages
 {
@@ -8,22 +10,25 @@ namespace FrontEndMicroService.Pages
     {
         private readonly ILogger<IndexModel> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
         public List<PatientDTO> Patients { get; set; } = new();
         public string Username { get; set; } = "";
 
-        public IndexModel(ILogger<IndexModel> logger, IHttpClientFactory httpClientFactory)
+        public IndexModel(ILogger<IndexModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
-            // Check if user is logged in
+            //  Ensure user is authenticated
             var token = HttpContext.Session.GetString("JWT");
             if (string.IsNullOrEmpty(token))
             {
+                _logger.LogWarning("No JWT found in session, redirecting to login...");
                 return RedirectToPage("/Login");
             }
 
@@ -31,35 +36,40 @@ namespace FrontEndMicroService.Pages
 
             try
             {
-                var httpClient = _httpClientFactory.CreateClient("Patients");
+                var gatewayBaseUrl = _configuration["ApiGateway:BaseUrl"] ?? "http://apigateway";
 
-                // Add JWT token to request
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                var httpClient = _httpClientFactory.CreateClient();
 
-                _logger.LogInformation("Client base address: {BaseAddress}", httpClient.BaseAddress);
-                _logger.LogInformation("Using JWT token: {Token}", token?.Substring(0, Math.Min(token.Length, 50)) + "...");
-                _logger.LogInformation("Making request to: patients");
+                httpClient.BaseAddress = new Uri($"{gatewayBaseUrl}/");
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                // Call through the gateway
-                var patients = await httpClient.GetFromJsonAsync<List<PatientDTO>>("patients");
-                _logger.LogInformation("Fetched {Count} patients", patients?.Count ?? 0);
+                _logger.LogInformation("Fetching patients via Ocelot Gateway at: {Url}", httpClient.BaseAddress);
+
+                var response = await httpClient.GetAsync("patients");
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    _logger.LogWarning("Unauthorized (401): Token likely expired, redirecting to login.");
+                    HttpContext.Session.Clear();
+                    return RedirectToPage("/Login");
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+                var patients = JsonSerializer.Deserialize<List<PatientDTO>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (patients != null)
-                {
                     Patients = patients;
-                }
+
+                _logger.LogInformation("Fetched {Count} patients", Patients.Count);
             }
-            catch (HttpRequestException ex) when (ex.Message.Contains("401"))
+            catch (HttpRequestException ex)
             {
-                _logger.LogWarning("Token expired or invalid - redirecting to login");
-                HttpContext.Session.Clear();
-                return RedirectToPage("/Login");
+                _logger.LogError(ex, "HTTP request to Ocelot gateway failed.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to fetch patients through Ocelot gateway");
-                // Keep Patients as empty list so page still renders
+                _logger.LogError(ex, "Unexpected error fetching patients.");
             }
 
             return Page();
@@ -75,18 +85,17 @@ namespace FrontEndMicroService.Pages
 
             try
             {
-                var httpClient = _httpClientFactory.CreateClient("Patients");
+                var gatewayBaseUrl = _configuration["ApiGateway:BaseUrl"] ?? "http://apigateway";
 
-                // Add JWT token to request
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                var httpClient = _httpClientFactory.CreateClient();
+                httpClient.BaseAddress = new Uri($"{gatewayBaseUrl}/");
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                // Delete patient
                 var response = await httpClient.DeleteAsync($"patients/{id}");
 
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
-                    _logger.LogWarning("Token expired during delete - redirecting to login");
+                    _logger.LogWarning("Unauthorized (401) during delete - redirecting to login");
                     HttpContext.Session.Clear();
                     return RedirectToPage("/Login");
                 }

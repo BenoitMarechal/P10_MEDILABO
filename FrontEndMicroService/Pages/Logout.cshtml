@@ -1,5 +1,18 @@
 ﻿@page
-@model FrontEndMicroService.Pages.LogoutModel
+@model LogoutModel
 @{
-
+    ViewData["Title"] = "Logout";
 }
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="card-title mb-4">Logged Out</h3>
+                    <p>You have been successfully logged out.</p>
+                    <a asp-page="/Login" class="btn btn-primary">Login Again</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

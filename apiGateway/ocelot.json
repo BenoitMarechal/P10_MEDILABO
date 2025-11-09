@@ -10,9 +10,12 @@
         }
       ],
       "UpstreamPathTemplate": "/patients/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]     
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
-
     {
       "DownstreamPathTemplate": "/api/notes/{everything}",
       "DownstreamScheme": "http",
@@ -23,9 +26,12 @@
         }
       ],
       "UpstreamPathTemplate": "/notes/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      }
     },
-
     {
       "DownstreamPathTemplate": "/api/identity/{everything}",
       "DownstreamScheme": "http",
@@ -38,8 +44,6 @@
       "UpstreamPathTemplate": "/identity/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
     },
-
-
     {
       "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",

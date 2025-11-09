@@ -2,22 +2,24 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddLogging();
 
-// Keep your existing HTTP client configuration
-builder.Services.AddHttpClient("Patients", client =>
+// Add HttpClient factory for calling Identity service
+builder.Services.AddHttpClient("Gateway", client =>
 {
-    client.BaseAddress = new Uri("http://apigateway:80/"); // Your container setup
-    client.Timeout = TimeSpan.FromSeconds(30);
+    var gatewayUrl = builder.Configuration["ApiGateway:BaseUrl"] ?? "http://apigateway:5000";
+    client.BaseAddress = new Uri(gatewayUrl);
 });
 
-// Add session support
+// Add session support for storing auth tokens
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(60); // Match JWT expiry
+    options.IdleTimeout = TimeSpan.FromHours(1);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+// Add distributed memory cache (required for session)
+builder.Services.AddDistributedMemoryCache();
 
 var app = builder.Build();
 
@@ -28,21 +30,16 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Your existing path base configuration
-app.UsePathBase("/frontend");
-app.Use(async (context, next) =>
-{
-    if (context.Request.Path == "/frontend")
-        context.Response.Redirect("/frontend/");
-    else
-        await next();
-});
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
-app.UseSession(); // Add this before MapRazorPages
+
+// Add session middleware
+app.UseSession();
+
 app.UseAuthorization();
+
 app.MapRazorPages();
 
 app.Run();

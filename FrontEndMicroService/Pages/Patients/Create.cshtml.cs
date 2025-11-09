@@ -1,7 +1,9 @@
+using Amazon.Runtime;
 using FrontEndMicroService.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace FrontEndMicroService.Pages.Patients
@@ -10,11 +12,13 @@ namespace FrontEndMicroService.Pages.Patients
     {
         private readonly ILogger<CreateModel> _logger;
         private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
-        public CreateModel(ILogger<CreateModel> logger, IHttpClientFactory httpClientFactory)
+        public CreateModel(ILogger<CreateModel> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _logger = logger;
             _httpClient = httpClientFactory.CreateClient("Patients");
+            _configuration = configuration;
         }
 
         [BindProperty]
@@ -27,7 +31,16 @@ namespace FrontEndMicroService.Pages.Patients
 
         public async Task<IActionResult> OnPostAsync()
         {
+
+            //  Ensure user is authenticated
             var token = HttpContext.Session.GetString("JWT");
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("No JWT found in session, redirecting to login...");
+                return RedirectToPage("/Login");
+            }
+
+
 
             if (!ModelState.IsValid)
             {
@@ -39,8 +52,14 @@ namespace FrontEndMicroService.Pages.Patients
             try
             {
                 // Add JWT token to request
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                var gatewayBaseUrl = _configuration["ApiGateway:BaseUrl"] ?? "http://apigateway";
+
+               // var httpClient = _httpClientFactory.CreateClient();
+
+                _httpClient.BaseAddress = new Uri($"{gatewayBaseUrl}/");
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                //_httpClient.DefaultRequestHeaders.Authorization =
+                //    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                 _logger.LogInformation("Creating new patient: {FirstName} {LastName}", Patient.FirstName, Patient.LastName);
                 _logger.LogInformation("Client base address: {BaseAddress}", _httpClient.BaseAddress);
 

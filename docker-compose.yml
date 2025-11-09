@@ -47,7 +47,8 @@ services:
     ports:
       - "5003:80"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=PatientsDb;User Id=sa;Password=YourStrong@Passw0rd123;Encrypt=True;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=IdentityDb;User Id=sa;Password=YourStrong@Passw0rd123;Encrypt=True;TrustServerCertificate=True;
+
     depends_on:
       - patientsmicroservice
     restart: unless-stopped
@@ -70,7 +71,7 @@ services:
       
   frontendmicroservice:
     environment:
-        - ASPNETCORE_ENVIRONMENT=Development
+         - ASPNETCORE_ENVIRONMENT=Docker
     build:
       context: .
       dockerfile: FrontEndMicroService/Dockerfile
@@ -84,18 +85,20 @@ services:
     restart: unless-stopped
 
   apigateway:
-    build:
-      context: .
-      dockerfile: apiGateway/Dockerfile
-    container_name: apigateway
-    platform: linux/amd64
-    ports:
-      - "5000:80"
-    depends_on:
-      - patientsmicroservice
-      - notesmicroservice
-      - frontendmicroservice
-    restart: unless-stopped
+      build:
+        context: .
+        dockerfile: apiGateway/Dockerfile
+      container_name: apigateway
+      platform: linux/amd64
+      ports:
+        - "5000:80"  # Changed from "5000:80"
+      environment:
+        - ASPNETCORE_URLS=http://+:5000  # Add this line
+      depends_on:
+        - patientsmicroservice
+        - notesmicroservice
+        - frontendmicroservice
+      restart: unless-stopped
 
 volumes:
   sqlserver_data:

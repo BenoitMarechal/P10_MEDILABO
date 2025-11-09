@@ -5,10 +5,15 @@ namespace FrontEndMicroService.Pages
 {
     public class LogoutModel : PageModel
     {
-        public IActionResult OnPost()
+        public IActionResult OnGet()
         {
-            HttpContext.Session.Clear(); // clear JWT + Username
-            return RedirectToPage("/Login");
+            // Clear session
+            HttpContext.Session.Clear();
+
+            // Clear auth cookie
+            Response.Cookies.Delete("AuthToken");
+
+            return Page();
         }
     }
 }
